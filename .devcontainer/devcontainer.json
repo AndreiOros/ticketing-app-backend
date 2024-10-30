@@ -1,0 +1,12 @@
+{
+    "name": "Django Dev Container",
+    "dockerFile": "../Dockerfile",
+    "context": "..",
+    "appPort": ["8000:8000"],
+    "extensions": ["ms-python.python"],
+    "settings": {
+        "python.pythonPath": "/usr/local/bin/python"
+    },
+    "postCreateCommand": "pip install -r requirements.txt",
+    "remoteUser": "root"
+}
