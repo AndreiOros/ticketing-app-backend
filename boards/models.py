@@ -13,6 +13,10 @@ class Board(models.Model):
     def __str__(self):
         return self.name
     
+    @property
+    def all_lists(self):
+        return self.lists.all()
+    
 
 class List(models.Model):
     id = models.AutoField(primary_key=True)
@@ -22,6 +26,10 @@ class List(models.Model):
 
     def __str__(self):
         return self.title
+    
+    @property
+    def all_cards(self):
+        return self.cards.all()
 
 
 class Card(models.Model):
