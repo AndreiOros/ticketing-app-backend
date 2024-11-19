@@ -39,6 +39,7 @@ class Card(models.Model):
     due_date = models.DateTimeField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     list = models.ForeignKey(List, on_delete=models.CASCADE, related_name='cards')
+    position = models.IntegerField(default=0)
 
     def __str__(self):
         return self.title
