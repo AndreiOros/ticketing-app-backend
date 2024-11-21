@@ -1,6 +1,13 @@
 from rest_framework import serializers
-from .models import CustomUser
+from .models import CustomUser, Organisation
 from django.contrib.auth import authenticate
+
+class OrganisationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Organisation
+        fields = ['id', 'name', 'owner', 'members']
+        read_only_fields = ['id', 'owner']
+
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:

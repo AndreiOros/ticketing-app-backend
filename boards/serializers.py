@@ -1,19 +1,34 @@
 from rest_framework import serializers
-from .models import Board, List, Card
+from .models import Board, List, Card, Comment
 from user.models import CustomUser
+
+
+class CommentSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(required=False)
+    card = serializers.PrimaryKeyRelatedField(queryset=Card.objects.all(), required=False)
+    author = serializers.PrimaryKeyRelatedField(queryset=CustomUser.objects.all(), required=False)
+
+    class Meta:
+        model = Comment
+        fields = ['id', 'text', 'created_at', 'card', 'author']
+        read_only_fields = ['id', 'created_at']
 
 
 class CardSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(required=False)
+    list = serializers.PrimaryKeyRelatedField(queryset=List.objects.all(), required=False)
+    comments = CommentSerializer(many=True, required=False)
+
     class Meta:
         model = Card
-        fields = ['id', 'title', 'description', 'due_date', 'created_at', 'list', 'position']
+        fields = ['id', 'title', 'description', 'due_date', 'created_at', 'list', 'position', 'comments']
         read_only_fields = ['id', 'created_at']
 
 
 class ListSerializer(serializers.ModelSerializer):
     cards = CardSerializer(many=True)
     id = serializers.IntegerField(required=False)
+    board = serializers.PrimaryKeyRelatedField(queryset=Board.objects.all(), required=False)
 
     class Meta:
         model = List
@@ -29,10 +44,33 @@ class ListSerializer(serializers.ModelSerializer):
 
 class BoardSerializer(serializers.ModelSerializer):
     lists = ListSerializer(many=True)
+    owner = serializers.PrimaryKeyRelatedField(queryset=CustomUser.objects.all(), required=False)
+    members = serializers.PrimaryKeyRelatedField(queryset=CustomUser.objects.all(), many=True, required=False)
 
     class Meta:
         model = Board
         fields = ['id', 'name', 'description', 'owner', 'members', 'lists']
+
+    def create(self, validated_data):
+        # Handle nested lists
+        lists_data = validated_data.pop('lists', [])
+        owner = validated_data.pop('owner')
+
+        # Create the board
+        board = Board.objects.create(owner=owner, **validated_data)
+
+        # Add the owner to the members list
+        board.members.add(owner)
+
+        for list_data in lists_data:
+            cards_data = list_data.pop('cards', [])
+            list_instance = List.objects.create(board=board, **list_data)
+
+            # Create cards for the new list
+            for card_data in cards_data:
+                Card.objects.create(list=list_instance, **card_data)
+
+        return board
 
     def update(self, instance, validated_data):
         # Update the board fields
@@ -75,19 +113,20 @@ class BoardSerializer(serializers.ModelSerializer):
                         card_instance.save()
                     else:
                         # Create new cards
+                        card_data.pop('list')
                         Card.objects.create(list=list_instance, **card_data)
 
                 # Delete removed cards
                 for card in existing_cards.values():
                     changed_card.append(card)
             else:
-                # Create new lists
-                new_list = List.objects.create(board=instance, **list_data)
-
-                # Create cards for the new list
-                cards_data = list_data.get('cards', [])
+                # Create a new list
+                cards_data = list_data.pop('cards', [])
+                new_list_instance = List.objects.create(board=instance, **list_data)
+    
+                # Create new cards for the new list
                 for card_data in cards_data:
-                    Card.objects.create(list=new_list, **card_data)
+                    Card.objects.create(list=new_list_instance, **card_data)
 
         # Delete removed lists
         for list_instance in existing_lists.values():

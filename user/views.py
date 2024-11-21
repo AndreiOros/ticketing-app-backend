@@ -1,7 +1,7 @@
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
-from .models import CustomUser
-from .serializers import UserSerializer, LoginSerializer
+from .models import CustomUser, Organisation
+from .serializers import UserSerializer, LoginSerializer, OrganisationSerializer
 from rest_framework.views import APIView
 from django.contrib.auth import authenticate
 from rest_framework.response import Response
@@ -32,4 +32,16 @@ class LoginAPIView(APIView):
                     "user": user_data
             }, status=status.HTTP_200_OK)
 
-            return Response({'Message': 'Invalid email and password'}, status=status.HTTP_401_UNAUTHORIZED)
+        return Response({'Message': 'Invalid email and password'}, status=status.HTTP_401_UNAUTHORIZED)
+
+
+class OrganisationViewSet(viewsets.ModelViewSet):
+    queryset = Organisation.objects.all()
+    serializer_class = OrganisationSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return Organisation.objects.filter(owner=self.request.user)
+
+    def perform_create(self, serializer):
+        serializer.save(owner=self.request.user)

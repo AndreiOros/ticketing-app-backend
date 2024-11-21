@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Board, List, Card
+from .models import Board, List, Card, Comment
 
 @admin.register(Board)
 class BoardAdmin(admin.ModelAdmin):
@@ -16,3 +16,9 @@ class ListAdmin(admin.ModelAdmin):
 class CardAdmin(admin.ModelAdmin):
     list_display = ('title', 'list', 'due_date', 'created_at')
     search_fields = ('title', 'list__name')
+
+
+@admin.register(Comment)
+class CommnetAdmin(admin.ModelAdmin):
+    list_display = ('text', 'card', 'author', 'created_at')
+    search_fields = ('text', 'card__title', 'author__email')

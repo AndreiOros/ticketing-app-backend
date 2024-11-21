@@ -38,3 +38,12 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     @property
     def all_boards(self):
         return self.boards.all()
+
+
+class Organisation(models.Model):
+    name = models.CharField(max_length=30)
+    owner = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='organisation_owner')
+    members = models.ManyToManyField(CustomUser, related_name='organisation_member')
+
+    def __str__(self):
+        return self.name

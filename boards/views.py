@@ -1,6 +1,6 @@
 from rest_framework import viewsets
-from .models import Board, List, Card
-from .serializers import BoardSerializer, ListSerializer, CardSerializer
+from .models import Board, List, Card, Comment
+from .serializers import BoardSerializer, ListSerializer, CardSerializer, CommentSerializer
 from rest_framework.permissions import IsAuthenticated
 
 class BoardViewSet(viewsets.ModelViewSet):
@@ -29,3 +29,11 @@ class CardViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save()
+
+
+class CommentViewSet(viewsets.ModelViewSet):
+    queryset = Comment.objects.all()
+    serializer_class = CommentSerializer
+
+    def perform_create(self, serializer):
+        serializer.save(author=self.request.user)
