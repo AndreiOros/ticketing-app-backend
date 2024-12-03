@@ -1,12 +1,13 @@
 from rest_framework import serializers
 from .models import Board, List, Card, Comment
 from user.models import CustomUser
+from user.serializers import UserDisplaySerializer
 
 
 class CommentSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(required=False)
     card = serializers.PrimaryKeyRelatedField(queryset=Card.objects.all(), required=False)
-    author = serializers.PrimaryKeyRelatedField(queryset=CustomUser.objects.all(), required=False)
+    author = UserDisplaySerializer()
 
     class Meta:
         model = Comment
@@ -96,6 +97,7 @@ class BoardSerializer(serializers.ModelSerializer):
 
                 for card_data in cards_data:
                     card_id = card_data.get('id')
+                    comments_data = card_data.pop('comments', [])
                     if card_id in existing_cards:
                         card_instance = existing_cards.pop(card_id)
                         card_instance.title = card_data.get('title', card_instance.title)
@@ -103,6 +105,20 @@ class BoardSerializer(serializers.ModelSerializer):
                         card_instance.due_date = card_data.get('due_date', card_instance.due_date)
                         card_instance.position = card_data.get('position', card_instance.position)
                         card_instance.save()
+
+                        # Handle nested comments
+                        existing_comments = {comment.id: comment for comment in card_instance.comments.all()}
+                        for comment_data in comments_data:
+                            comment_id = comment_data.get('id')
+                            if comment_id in existing_comments:
+                                comment_instance = existing_comments.pop(comment_id)
+                                comment_instance.text = comment_data.get('text', comment_instance.text)
+                                comment_instance.save()
+                            else:
+                                comment_data.pop('card', None)
+                                author_data = comment_data.pop('author', None)
+                                author_instance = CustomUser.objects.get(first_name=author_data.get('first_name'), last_name=author_data.get('last_name'))
+                                Comment.objects.create(card=card_instance, **comment_data , author=author_instance)
                     elif card_id:
                         card_instance = Card.objects.get(id=card_id)
                         card_instance.title = card_data.get('title', card_instance.title)
@@ -111,6 +127,18 @@ class BoardSerializer(serializers.ModelSerializer):
                         card_instance.position = card_data.get('position', card_instance.position)
                         card_instance.list = list_instance
                         card_instance.save()
+
+                        # Handle nested comments
+                        existing_comments = {comment.id: comment for comment in card_instance.comments.all()}
+                        for comment_data in comments_data:
+                            comment_id = comment_data.get('id')
+                            if comment_id in existing_comments:
+                                comment_instance = existing_comments.pop(comment_id)
+                                comment_instance.text = comment_data.get('text', comment_instance.text)
+                                comment_instance.save()
+                            else:
+                                comment_data.pop('card', None)
+                                Comment.objects.create(card=card_instance, **comment_data)
                     else:
                         # Create new cards
                         card_data.pop('list')
@@ -118,7 +146,8 @@ class BoardSerializer(serializers.ModelSerializer):
 
                 # Delete removed cards
                 for card in existing_cards.values():
-                    changed_card.append(card)
+                    card_data = Card.objects.get(id = card.id)
+                    card_data.delete()
             else:
                 # Create a new list
                 cards_data = list_data.pop('cards', [])

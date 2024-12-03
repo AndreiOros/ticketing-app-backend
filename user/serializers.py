@@ -9,6 +9,13 @@ class OrganisationSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'owner']
 
 
+class UserDisplaySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CustomUser
+        fields = ['id', 'first_name', 'last_name']
+        # read_only_fields = ['id', 'first_name', 'last_name']
+
+
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
