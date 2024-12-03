@@ -42,3 +42,14 @@ class LoginSerializer(serializers.Serializer):
                 raise serializers.ValidationError('Unable to log in with provided credentials.')
         else:
             raise serializers.ValidationError('Must include "email" and "password".')
+        
+
+class ChangePasswordSerializer(serializers.Serializer):
+    current_password = serializers.CharField(write_only=True)
+    new_password = serializers.CharField(write_only=True)
+
+    # def validate_new_password(self, value):
+    #     if len(value) < 8:
+    #         raise serializers.ValidationError("New password must be at least 8 characters long.")
+    #     return value
+

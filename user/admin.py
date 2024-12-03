@@ -5,12 +5,11 @@ from .models import CustomUser, Organisation
 class CustomUserAdmin(UserAdmin):
     model = CustomUser
     list_display = ['email', 'first_name', 'last_name']
-    list_filter = ['is_active', 'date_joined']  # Example fields to filter by
+    list_filter = ['is_active', 'date_joined']
     fieldsets = (
         (None, {'fields': ('email', 'password')}),
         ('Personal info', {'fields': ('first_name', 'last_name')}),
         ('Permissions', {'fields': ('is_active', 'is_superuser')}),
-        ('Important dates', {'fields': ('last_login', 'date_joined')}),
     )
     add_fieldsets = (
         (None, {

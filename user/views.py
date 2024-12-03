@@ -1,13 +1,14 @@
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
 from .models import CustomUser, Organisation
-from .serializers import UserSerializer, LoginSerializer, OrganisationSerializer
+from .serializers import UserSerializer, LoginSerializer, OrganisationSerializer, ChangePasswordSerializer
 from rest_framework.views import APIView
 from django.contrib.auth import authenticate
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.authtoken.models import Token
 from rest_framework.permissions import AllowAny
+from django.contrib.auth.hashers import check_password
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = CustomUser.objects.all()
@@ -33,6 +34,27 @@ class LoginAPIView(APIView):
             }, status=status.HTTP_200_OK)
 
         return Response({'Message': 'Invalid email and password'}, status=status.HTTP_401_UNAUTHORIZED)
+
+
+class ChangePasswordView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        serializer = ChangePasswordSerializer(data=request.data)
+        if serializer.is_valid():
+            user = request.user
+            current_password = serializer.validated_data['current_password']
+            new_password = serializer.validated_data['new_password']
+
+            if not check_password(current_password, user.password):
+                return Response({"error": "Current password is incorrect."}, status=status.HTTP_400_BAD_REQUEST)
+
+            user.set_password(new_password)
+            user.save()
+            return Response({"message": "Password updated successfully."}, status=status.HTTP_200_OK)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 
 class OrganisationViewSet(viewsets.ModelViewSet):
