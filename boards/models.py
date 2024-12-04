@@ -4,7 +4,7 @@ from django.db import models
 class Board(models.Model):
     id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=30)
-    description = models.CharField(max_length=100)
+    description = models.CharField(max_length=800)
     created_at = models.DateTimeField(auto_now_add=True)
     owner = models.ForeignKey('user.CustomUser', on_delete=models.CASCADE, related_name='boards')
     members = models.ManyToManyField('user.CustomUser', related_name='boards_member')
