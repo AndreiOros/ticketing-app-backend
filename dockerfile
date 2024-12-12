@@ -1,24 +1,33 @@
-# Base image
-FROM python:3.9-slim
+FROM python:3.11
+WORKDIR /ticketing
+COPY . .
+RUN pip install -r requirements.txt
 
-# Set environment variables
-ENV PYTHONUNBUFFERED 1
+# Update the port to 8000 to match the exposed port
+CMD ["gunicorn", "ticketing.wsgi:application", "--bind", "0.0.0.0:8000"]
 
-# Set working directory
-WORKDIR /app
 
-# Install Git
-RUN apt-get update && apt-get install -y git && apt-get clean
+# # Base image
+# FROM python:3.9-slim
 
-# Copy requirements and install dependencies
-COPY requirements.txt /app/
-RUN pip install --upgrade pip && pip install -r requirements.txt
+# # Set environment variables
+# ENV PYTHONUNBUFFERED 1
 
-# Copy the rest of the application code
-COPY . /app/
+# # Set working directory
+# WORKDIR /app
 
-# Expose the port
-EXPOSE 8000
+# # Install Git
+# RUN apt-get update && apt-get install -y git && apt-get clean
 
-# Default command to run the server
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+# # Copy requirements and install dependencies
+# COPY requirements.txt /app/
+# RUN pip install --upgrade pip && pip install -r requirements.txt
+
+# # Copy the rest of the application code
+# COPY . /app/
+
+# # Expose the port
+# EXPOSE 8000
+
+# # Default command to run the server
+# CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]

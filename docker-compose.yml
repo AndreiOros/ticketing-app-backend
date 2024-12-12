@@ -3,12 +3,12 @@ version: '3.8'
 services:
     web:
         build: .
-        command: python manage.py runserver 0.0.0.0:8000
+        command: python manage.py runserver 0.0.0.0:8000  # Make sure it's using 8000
         networks:
             - ticketing-app
         volumes:
             - .:/app
         ports:
-            - '8000:8000'
+            - '8000:8000'  # Expose port 8000 externally
         environment:
             - DEBUG=1
